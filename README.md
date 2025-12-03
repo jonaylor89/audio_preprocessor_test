@@ -6,15 +6,15 @@ Same tool implemented in 5 ways to compare performance and ergonomics.
 
 ## Benchmark
 
-320 WAV files, resample to 16kHz, max 10s duration, Apple M1:
+320 WAV files, resample to 16kHz, max 10s duration, 8 threads, Apple M1:
 
 | Implementation | Time | Speedup |
 |----------------|------|---------|
-| Python (librosa) | 52s | 1x |
-| Bash (ffmpeg CLI) | 6s | 9x |
-| Zig (FFmpeg bindings) | 1.0s | 52x |
-| C (FFmpeg bindings) | 1.0s | 52x |
-| Rust (FFmpeg bindings) | 0.7s | 74x |
+| Python (librosa) | 14.19s | 1x |
+| Bash (ffmpeg CLI) | 8.45s | 1.7x |
+| Zig (FFmpeg bindings) | 1.29s | 11x |
+| Rust (FFmpeg bindings) | 0.93s | 15x |
+| C (FFmpeg bindings) | 0.85s | 17x |
 
 ## Usage
 
@@ -23,8 +23,8 @@ Same tool implemented in 5 ways to compare performance and ergonomics.
 zig build run -- ./input ./output --sample-rate 16000 --min-duration 1.0 --max-duration 10.0
 
 # Rust
-cd rust_src
-cargo run --release -- ./input ./output --min-duration 1.0 --max-duration 10.0
+cd rust_src && cargo build --release
+./target/release/audio_preprocessor ./input ./output --min-duration 1.0 --max-duration 10.0
 
 # C
 cd c_src && make
