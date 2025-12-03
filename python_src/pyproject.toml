@@ -1,0 +1,14 @@
+[project]
+name = "audio-preprocessor"
+version = "0.1.0"
+description = "Audio dataset preprocessor for ML training"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "librosa>=0.10",
+    "numpy>=1.24",
+    "soundfile>=0.12",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

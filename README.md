@@ -41,6 +41,18 @@ Concurrency
 
 The utility is designed to leverage Zig's concurrency primitives to process thousands of audio files in parallel, drastically reducing overall dataset preparation time.
 
+# Benchmark Results
+
+Processing 320 audio files (WAV, ~3-10 minutes each) on Apple M1, resampling to 16kHz and normalizing to 10 second max duration:
+
+| Implementation | Time | Speedup vs Python |
+|----------------|------|-------------------|
+| Python (librosa/numpy) | 52s | 1x |
+| Bash (ffmpeg CLI) | ~6s | 9x |
+| Rust (native FFmpeg bindings) | 0.7s | 74x |
+| Zig (native FFmpeg bindings) | 1.0s | 52x |
+| C (native FFmpeg bindings) | ~1s | 52x |
+
 # Implementation Outline
 
 The utility performs the following critical steps:
