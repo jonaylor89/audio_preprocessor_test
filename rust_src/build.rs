@@ -4,17 +4,27 @@ use std::path::PathBuf;
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
-    // Link FFmpeg libraries
-    println!("cargo:rustc-link-search=/opt/homebrew/lib");
-    println!("cargo:rustc-link-lib=avcodec");
-    println!("cargo:rustc-link-lib=avformat");
-    println!("cargo:rustc-link-lib=avutil");
-    println!("cargo:rustc-link-lib=swresample");
+    // Use pkg-config to find FFmpeg libraries
+    let avcodec = pkg_config::probe_library("libavcodec").expect("libavcodec not found");
+    let avformat = pkg_config::probe_library("libavformat").expect("libavformat not found");
+    let avutil = pkg_config::probe_library("libavutil").expect("libavutil not found");
+    let swresample = pkg_config::probe_library("libswresample").expect("libswresample not found");
+
+    // Collect include paths for bindgen
+    let mut clang_args: Vec<String> = Vec::new();
+    for path in avcodec
+        .include_paths
+        .iter()
+        .chain(avformat.include_paths.iter())
+        .chain(avutil.include_paths.iter())
+        .chain(swresample.include_paths.iter())
+    {
+        clang_args.push(format!("-I{}", path.display()));
+    }
 
     // Generate bindings
-    let bindings = bindgen::Builder::default()
+    let mut builder = bindgen::Builder::default()
         .header("wrapper.h")
-        .clang_arg("-I/opt/homebrew/include")
         .allowlist_function("avformat_.*")
         .allowlist_function("avcodec_.*")
         .allowlist_function("av_.*")
@@ -45,9 +55,13 @@ fn main() {
         .allowlist_var("AV_ROUND_.*")
         .allowlist_var("AVERROR.*")
         .allowlist_var("EAGAIN")
-        .derive_default(true)
-        .generate()
-        .expect("Unable to generate bindings");
+        .derive_default(true);
+
+    for arg in &clang_args {
+        builder = builder.clang_arg(arg);
+    }
+
+    let bindings = builder.generate().expect("Unable to generate bindings");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings

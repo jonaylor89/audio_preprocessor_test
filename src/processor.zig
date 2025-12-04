@@ -147,12 +147,13 @@ pub fn processFile(input_path: [:0]const u8, output_path: [:0]const u8, config: 
             );
 
             var out_ptr: [*]u8 = @ptrCast(&resample_buf);
-            const in_ptr: [*c]const [*c]const u8 = @ptrCast(&dec_frame.*.extended_data[0]);
+            const in_ptr: [*c][*c]const u8 = @ptrCast(@constCast(&dec_frame.*.extended_data[0]));
 
+            const max_out: i64 = @intCast(resample_buf.len / channels);
             const converted = c.swr_convert(
                 swr_ctx,
                 @ptrCast(&out_ptr),
-                @intCast(@min(out_samples_est, resample_buf.len / channels)),
+                @intCast(@min(out_samples_est, max_out)),
                 in_ptr,
                 dec_frame.*.nb_samples,
             );
