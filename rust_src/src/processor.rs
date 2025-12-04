@@ -194,10 +194,10 @@ unsafe fn process_file_inner(
 
     ret = swr_alloc_set_opts2(
         &mut swr_ctx,
-        &dst_ch_layout,
+        &mut dst_ch_layout as *mut _,
         AVSampleFormat_AV_SAMPLE_FMT_FLT,
         config.target_sample_rate as i32,
-        &in_ch_layout,
+        &in_ch_layout as *const _ as *mut _,
         in_sample_fmt,
         in_sample_rate,
         0,
@@ -281,9 +281,9 @@ unsafe fn process_file_inner(
 
             let converted = swr_convert(
                 swr_ctx,
-                &out_ptr,
+                &mut out_ptr as *mut *mut u8,
                 max_out.min(out_samples_est),
-                in_ptr as *const *const u8,
+                in_ptr as *mut *const u8,
                 in_nb_samples,
             );
 
@@ -355,7 +355,7 @@ unsafe fn process_file_inner(
     while total_output_samples < max_samples {
         let mut out_ptr = resample_buf.as_mut_ptr() as *mut u8;
         let max_out = (resample_buf.len() / channels as usize) as i32;
-        let flushed = swr_convert(swr_ctx, &out_ptr, max_out, ptr::null(), 0);
+        let flushed = swr_convert(swr_ctx, &mut out_ptr as *mut *mut u8, max_out, ptr::null_mut(), 0);
         if flushed <= 0 {
             break;
         }

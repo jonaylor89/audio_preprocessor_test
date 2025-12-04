@@ -71,14 +71,22 @@ mkdir -p "$OUTPUT_DIR"
 # Function to process a single file
 process_file() {
     local input_file="$1"
-    local output_dir="$2"
-    local sample_rate="$3"
-    local min_dur="$4"
-    local max_dur="$5"
-    
+    local input_dir="$2"
+    local output_dir="$3"
+    local sample_rate="$4"
+    local min_dur="$5"
+    local max_dur="$6"
+
+    # Get relative path from input dir
+    local rel_path="${input_file#$input_dir/}"
+    local rel_dir=$(dirname "$rel_path")
     local basename=$(basename "$input_file")
     local name="${basename%.*}"
-    local output_file="$output_dir/${name}.wav"
+
+    # Create output subdirectory if needed
+    local out_subdir="$output_dir/$rel_dir"
+    mkdir -p "$out_subdir"
+    local output_file="$out_subdir/${name}.wav"
     
     # Get input duration
     local duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$input_file" 2>/dev/null)
@@ -139,6 +147,6 @@ fi
 echo "Processing with $NUM_THREADS threads..."
 
 # Process files in parallel using xargs
-echo "$AUDIO_FILES" | xargs -P "$NUM_THREADS" -I {} bash -c "process_file '{}' '$OUTPUT_DIR' '$SAMPLE_RATE' '$MIN_DURATION' '$MAX_DURATION'"
+echo "$AUDIO_FILES" | xargs -P "$NUM_THREADS" -I {} bash -c "process_file '{}' '$INPUT_DIR' '$OUTPUT_DIR' '$SAMPLE_RATE' '$MIN_DURATION' '$MAX_DURATION'"
 
 echo "Processing complete!"
